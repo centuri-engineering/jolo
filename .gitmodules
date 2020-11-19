@@ -1,0 +1,3 @@
+[submodule "pygtftk"]
+	path = pygtftk
+	url = git@github.com:dputhier/pygtftk.git
