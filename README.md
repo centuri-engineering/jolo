@@ -1,9 +1,21 @@
 # jolo
 Jupyter / voilà interface to OLOGRAM
 
+
+## Install
+
+Install [bedtools](https://bedtools.readthedocs.io/en/latest/content/installation.html)
+
+```sh
+sudo apt-get install bedtools
+```
+
+
+
 ## Dependencies
 
-See environment.yml
+
+
 
 ## OLOGRAM documentation
 

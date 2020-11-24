@@ -1,0 +1,11 @@
+name: jolo
+channels:
+- conda-forge
+
+dependencies:
+- python>=3.6
+- pygtftk
+- scipy
+- altair
+- pandas
+- ipywidgets
