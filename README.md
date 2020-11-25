@@ -1,6 +1,10 @@
 # jolo
 Jupyter / voilà interface to OLOGRAM
 
+## Try with mybinder
+
+ [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/centuri-engineering/jolo/main?urlpath=voila%2Frender%2Fnotebooks%2FOLOGRAM.ipynb)  
+
 
 ## Install
 
