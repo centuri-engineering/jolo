@@ -63,3 +63,9 @@ https://dputhier.github.io/pygtftk/ologram.html
 - Une URL qu’il pourra consulter avec son résultat.
 - Les résultats ont une certaine pérennité
 - Migrable facilement
+
+
+## Ressource management
+
+* https://docs.hpc.cofc.edu/using-the-hpc/scheduling-jobs/jupyterhub
+* https://docs.python.org/3/library/resource.html
