@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+ologram_input
+ologram_output

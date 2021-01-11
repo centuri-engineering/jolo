@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+from threading import Thread, Event
+from multiprocessing import Process
+import signal
 
 import numpy as np
 import pandas as pd
@@ -106,15 +109,15 @@ def _browse_args(parser):
 
 
 class OlogramCmd(widgets.VBox):
-    def __init__(self):
+    def __init__(self, input_dir):
 
         style = {"description_width": "200px"}
         self.parser = make_parser()
         self.all_args = _browse_args(self.parser)
 
-        self.gtfs = [f.as_posix() for f in Path(".").glob("*.gtf*")]
-        self.beds = [f.as_posix() for f in Path(".").glob("*.bed")]
-        self.genomes = [f.as_posix() for f in Path(".").glob("*.genome")]
+        self.gtfs = [f.as_posix() for f in Path(input_dir).glob("*.gtf*")]
+        self.beds = [f.as_posix() for f in Path(input_dir).glob("*.bed")]
+        self.genomes = [f.as_posix() for f in Path(input_dir).glob("*.genome")]
 
         self.arg_widgets = {
             "inputfile": widgets.Dropdown(
@@ -161,15 +164,27 @@ class OlogramCmd(widgets.VBox):
 
         options = widgets.VBox(list(self.arg_widgets.values()))
         self.run_btn = widgets.Button(description="run")
+        self.run_btn.button_style = "info"
         self.run_btn.on_click(self.run)
+        self.interupt_button = widgets.Button(description="stop")
+        self.interupt_button.on_click(self.stop)
         self.output = widgets.Output()
-        super().__init__([options, self.run_btn, self.cmd_box, self.output],)
+        self.current_process = Process(target=lambda: print("Not set"))
+        super().__init__(
+            [
+                options,
+                widgets.HBox([self.run_btn, self.interupt_button]),
+                self.cmd_box,
+                self.output,
+            ],
+        )
 
     def on_cmd_change(self, change):
 
-        value = f"""<h4>Generated command:\n\n</h4><p><code>{self.cmd}<code/><p/>"""
+        value = f"""<h4>Generated command:\n\n</h4><p><code>{self.cmd}</code></p>"""
         self.cmd_box.value = value
         self.run_btn.description = "run"
+        self.run_btn.button_style = "info"
 
     @property
     def args(self):
@@ -178,24 +193,19 @@ class OlogramCmd(widgets.VBox):
             _args.append(f"--{k}")
             _args.append(str(w.value))
             _args.append("-x")
-
         return _args
 
-    def run(self, btn):
+    @property
+    def kwargs(self):
         try:
-            args = self.parser.parse_args(self.args)
+            return self.parser.parse_args(self.args).__dict__
         except SystemExit:
             print("Invalid Command, parser tried to exit")
-            return
+            return None
         except Exception as e:
             print("Invalid command")
             print(e)
-            return
-        with self.output:
-            self.run_btn.description = "running ..."
-            ologram(**args.__dict__)
-            self.output.clear_output()
-            self.run_btn.description = "done"
+            return None
 
     @property
     def cmd(self):
@@ -207,3 +217,37 @@ class OlogramCmd(widgets.VBox):
                 _cmd.append(self.all_args.get(k, [""])[0])
                 _cmd.append(str(w.value))
         return " ".join(_cmd)
+
+    def run(self, btn):
+
+        if self.current_process.is_alive():
+            return
+
+        self.current_process.close()
+        with self.output:
+            if not self.kwargs:
+                self.run_btn.button_style = "danger"
+                self.run_btn.description = "errored"
+                return
+            self.run_btn.description = "running ..."
+            self.run_btn.button_style = "warning"
+            self.current_process = Process(target=self._call_ologram, name="main")
+            self.current_process.start()
+            self.output.clear_output()
+            return 0
+
+    def _call_ologram(self):
+        ologram(**self.kwargs)
+        self.run_btn.description = "done"
+        self.run_btn.button_style = "success"
+
+    def stop(self, btn):
+        if not self.current_process.is_alive():
+            return
+
+        self.run_btn.description = "stopping"
+        self.current_process.terminate()
+        self.current_process.join()
+        self.current_process.close()
+        self.run_btn.description = "stopped"
+        self.run_btn.button_style = "danger"
