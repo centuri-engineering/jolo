@@ -108,6 +108,29 @@ def _browse_args(parser):
     return all_args
 
 
+class BedList(widgets.Accordion):
+    def __init__(self, beds, **kwargs):
+        self.beds = beds
+        self.check_boxes = [
+            widgets.Checkbox(value=False, description=bed[0], disabled=False)
+            for bed in beds
+        ]
+
+        children = [widgets.VBox(self.check_boxes, **kwargs)]
+        super().__init__(children=children, selected_index=None)
+        super().set_title(
+            0, "Select more beds",
+        )
+
+    @property
+    def selected(self):
+        return [bed[1] for bed, box in zip(self.beds, self.check_boxes) if box.value]
+
+    @property
+    def value(self):
+        return " ".join(self.selected)
+
+
 class OlogramCmd(widgets.VBox):
     def __init__(self, input_dir, output_dir):
 
@@ -155,6 +178,9 @@ class OlogramCmd(widgets.VBox):
                 max=os.cpu_count(),
                 description="Number of threads to use",
                 style=style,
+            ),
+            "more-bed": BedList(
+                self.beds, description="Select more beds", style=style,
             ),
         }
         self.cmd_box = widgets.HTML(
@@ -219,6 +245,9 @@ class OlogramCmd(widgets.VBox):
             if isinstance(w.value, bool) and w.value:
                 _cmd.append(self.all_args.get(k, [""])[0])
             else:
+                # check for empty lists
+                if not w.value:
+                    continue
                 _cmd.append(self.all_args.get(k, [""])[0])
                 _cmd.append(str(w.value))
         return " ".join(_cmd)
