@@ -128,7 +128,7 @@ class BedList(widgets.Accordion):
 
     @property
     def value(self):
-        return " ".join(self.selected)
+        return self.selected
 
 
 class OlogramCmd(widgets.VBox):
@@ -220,7 +220,10 @@ class OlogramCmd(widgets.VBox):
         _args = []
         for k, w in self.arg_widgets.items():
             _args.append(f"--{k}")
-            _args.append(str(w.value))
+            if isinstance(w.value, list):
+                _args.extend(w.value)
+            else:
+                _args.append(str(w.value))
         _args.append("-x")
         _args.append(f"--outputdir")
         _args.append(f"{self.output_dir}")
@@ -249,7 +252,10 @@ class OlogramCmd(widgets.VBox):
                 if not w.value:
                     continue
                 _cmd.append(self.all_args.get(k, [""])[0])
-                _cmd.append(str(w.value))
+                if isinstance(w.value, list):
+                    _cmd.append(" ".join(w.value))
+                else:
+                    _cmd.append(str(w.value))
         return " ".join(_cmd)
 
     def run(self, btn):
