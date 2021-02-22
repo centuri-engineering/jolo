@@ -109,15 +109,18 @@ def _browse_args(parser):
 
 
 class OlogramCmd(widgets.VBox):
-    def __init__(self, input_dir):
+    def __init__(self, input_dir, output_dir):
 
         style = {"description_width": "200px"}
+        self.output_dir = output_dir
         self.parser = make_parser()
         self.all_args = _browse_args(self.parser)
 
-        self.gtfs = [f.as_posix() for f in Path(input_dir).glob("*.gtf*")]
-        self.beds = [f.as_posix() for f in Path(input_dir).glob("*.bed")]
-        self.genomes = [f.as_posix() for f in Path(input_dir).glob("*.genome")]
+        self.gtfs = [(f.name, f.as_posix()) for f in Path(input_dir).glob("*.gtf*")]
+        self.beds = [(f.name, f.as_posix()) for f in Path(input_dir).glob("*.bed")]
+        self.genomes = [
+            (f.name, f.as_posix()) for f in Path(input_dir).glob("*.genome")
+        ]
 
         self.arg_widgets = {
             "inputfile": widgets.Dropdown(
@@ -192,7 +195,9 @@ class OlogramCmd(widgets.VBox):
         for k, w in self.arg_widgets.items():
             _args.append(f"--{k}")
             _args.append(str(w.value))
-            _args.append("-x")
+        _args.append("-x")
+        _args.append(f"--outputdir")
+        _args.append(f"{self.output_dir}")
         return _args
 
     @property
